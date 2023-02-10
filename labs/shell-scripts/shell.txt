@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "Hello sameer" 
+ 
+=>  # is used to comment 
+=>  to excute a sh or bash file  it ( sh <filename>) also  (./<filename>) 
+=>  
+
+
+
+mkdir
+touch
+cat >filename
+$content
