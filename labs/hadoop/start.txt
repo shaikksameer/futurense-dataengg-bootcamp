@@ -1,0 +1,164 @@
+Big data (Hadoop)
+
+
+Big data => collection of dataset so large and complex that it becomes difficult 
+            to process using on -hand database manag. tools or traditional 
+            data processing application
+
+type of data =>
+    * structred data (tables)
+    * unstructred data (msg, post,pdf)
+    * semi structred data (json,excel)
+
+challanges of big data =>
+    capture
+    curation 
+    storage
+    search,
+    sharing
+    transfer
+    analysis
+    visualization 
+
+source of big data=> 
+    -stocks (tera to Petabytes) (1 terabyte per day)
+
+last decade complex and unstructure data is increased
+
+IBM def of big data 
+    => volume (size)
+    => velocity (speed)
+    => variety (diff type of data)
+
+
+big data in industry
+    => ebay         (ad targetting)(search quality)
+    => adhaar       (welfare schema)(justice)
+    => china mobile (customer churn prevention) (calling data records)
+    => nextbio      (gene sequencing) (health information exchange) (drug saftey)
+
+OLTP => curd operation  (online transaction processing)
+OLAP => quering         (online analytics processing)   (most use : data warehouse )
+
+Data Warehouse=> A data warehouse is a central repository of information that can be analyzed       
+                 to make more informed decisions. Data flows into a data warehouse from transactional systems,
+                 relational databases, and other sources, typically on a regular cadence.
+
+
+DataMart => A data mart is a data storage system that contains information specific to an organization's business unit. 
+            It contains a small and selected part of the data that the company stores in a larger storage system. 
+            Companies use a data mart to analyze department-specific information more efficiently.
+
+
+limitation of dw/bi
+    1.Cant explore original high fidelity raw data
+    2.moving data to compute doesnt scale---------------(etl memory may to be able to process the huge data)
+    3.Premature data death
+
+solution :
+    1. Data exploring  &  advanced analytics
+    2. Scalable throughout for ETL & aggregation
+    3. keep the data live forever
+
+hdfc(Hadoop Distributed File System) => store the data in distribution maner
+                                       ( distributed file system that handles large data sets running on commodity hardware.)
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+hadoop =>
+            It is a framework that allows the distributed processing oflarge data sets across 
+            clusters of commodity computer  using a simple programming model
+
+components of hadoop
+            => hdfs
+            => mapreduce
+
+key characterstics of hadoop=>
+            => highly Scalable
+            => reliable
+            => economical
+            => Flexible
+
+-> Replication factor in hadoop =>  replaction of node to withstand failure   
+
+-> If replication factor is n, then it can withstand upto n-1 faliure
+
+-> If the whole cluster goes down we have Disaster recovery culter (backup cluster)
+
+-> mapreduce framework will help go to each node performe the query and give the required output
+
+HDFS =>
+
+    -> distributed across all nodes "nodes"
+    -> natively redundant
+    -> NameNode tracks locations
+
+
+-> two program came in replace to mapreduce framework are  
+
+        => Hive (DW system)
+        => Pig Latin (Data analysis)
+
+
+sqoop=> Sqoop is a tool used to transfer bulk data between Hadoop and external datastores, 
+        such as relational databases (MS SQL Server, MySQL). To process data using Hadoop, 
+        the data first needs to be loaded into Hadoop clusters from several sources.
+
+
+flume => Apache Flume is an open-source, powerful, reliable and flexible system used to collect, 
+         aggregate and move large amounts of unstructured data from multiple data sources into HDFS/Hbase 
+         (for example) in a distributed fashion via it's strong coupling with the Hadoop
+
+
+
+Hbase is a nosql storage  for hadoop
+(HBase is very effective for handling large, sparse datasets.
+ HBase integrates seamlessly with Apache Hadoop and the Hadoop 
+ ecosystem and runs on top of the Hadoop Distributed File System (HDFS) or 
+ Amazon S3 using Amazon Elastic MapReduce (EMR) file system, or EMRFS.)
+
+
+apache Airflow=>  Apache Airflow allows you to write down a series of tasks that need to
+                  be completed, and then it will run those tasks for you on a schedule you specify. 
+                  For example, you can use Apache Airflow to automatically run a script that collects data 
+                  from the internet every day, or to send a report to your boss every week.Apache Airflow is used by 
+                  many companies to automate their processes and save time, so it's a very useful tool for businesses.
+
+map reduce can be replaced with spark 
+
+
+-> NameNode acts as the central coordinator 
+                (no file, no block, block loc , replica block loc )
+-> DataNode provide the computational and storage resources 
+
+
+Different mode in hadoop
+
+    => standalone mode                          (no hadoop daemos, entire process run in a single JVM)
+    => Pseduo-Distributed mode                  (hadoop daemos up, but on a single machines)
+    => Fully-Distributed/clustered/ prod mode   (hadoop daemons run on cluster of machines)
+
+
+
+block pool => is a set of blocks that belong to a single namespace.
+             Datanodes store blocks for all the block pools in the cluster.
+              Each Block Pool is managed independently.
+
+
+FS Image=>  FS-Image Editlogs. FsImage is a file stored on the OS filesystem that contains the 
+            complete directory structure (namespace) of the HDFS with details about the location of the data 
+            on the Data Blocks and which blocks are stored on which node. This file is used by the NameNode when it is started.
+
+advantages of mapreduce : 
+        => It takes processing to the data
+        => it allows processing od data in prallel 
+
+MapReduce architecure--> 
+                                          |-----------------shuffel-------------------|                                                  
+input data =>  distributed file system => map node (sort +send) => reduce node (merge) => Reduce => distributed file system (key /value)
+
+Yarn => Yet Another Resource Negotiator
+
+    => Resource manager
+    => Node Manager
+    => Application Master
