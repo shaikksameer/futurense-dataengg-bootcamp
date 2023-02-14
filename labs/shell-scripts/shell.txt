@@ -11,3 +11,13 @@ mkdir
 touch
 cat >filename
 $content
+
+loop (optional) 
+
+
+
+
+
+echo "$0"    => will print the file name 
+
+
