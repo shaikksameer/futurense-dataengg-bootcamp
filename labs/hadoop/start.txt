@@ -130,6 +130,16 @@ map reduce can be replaced with spark
 -> NameNode acts as the central coordinator 
                 (no file, no block, block loc , replica block loc )
 -> DataNode provide the computational and storage resources 
+                    -> stores actual data as blocks
+                    -> default size of block is 128 (2x and above)
+                    -> Replication helps to achive fault tolerance
+
+
+-> secondary NameNode 
+                ->backup for namenode
+                ->requries manual intervention to start in case primary namenode fails
+                ->every one hour data be sycned up
+
 
 
 Different mode in hadoop
@@ -162,3 +172,22 @@ Yarn => Yet Another Resource Negotiator
     => Resource manager
     => Node Manager
     => Application Master
+Physical split -> hdfs block
+Logical split -> Input split
+
+
+
+
+
+configration (hadoop)   
+    -> core.xml       ->Configuration common to both HDFS & MR. NameNode url, temp location, etc
+    -> hdfs-site.xml  ->HDFS configration -> block config, replication config,storage location
+    -> hadoop-env.sh  ->Map reduce related configration goes here
+    ->yarn-site.xml   ->Yarn realted configration
+    ->master          ->List of namenode
+    ->slave           -> List of datanode 
+
+alternate of jps
+    ->  ps -aux | grep java | awk '{print $12}'
+
+
