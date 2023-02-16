@@ -191,3 +191,5 @@ alternate of jps
     ->  ps -aux | grep java | awk '{print $12}'
 
 
+map side join 
+        => join works by performing the join before the data reaches the map function 
