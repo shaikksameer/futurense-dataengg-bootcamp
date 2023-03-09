@@ -1,0 +1,28 @@
+Assignment #1:
+
+1. Create "ratings" managed table
+
+# creating database 
+show databases;
+create databse hive_assigment;
+use hive_assigment;
+
+# creating the table 
+create table rating (userid int, movieid int, rating int, `timestamp` int) row format delimited fields terminated by ',';
+
+
+
+2. Load the data from ~/futurence_hadoop-pyspark/labs/dataset/movie/ratings.csv
+
+# loading data from local path 
+load data local inpath '/home/sameer/futurense-dataengg-bootcamp/assigments/hive/ratings.csv' overwrite into table rating;
+
+
+
+3. Display the ratings data
+#query 
+select * from rating;
+
+
+4. Display rating wise count
+select count(*) from rating group by rating;
