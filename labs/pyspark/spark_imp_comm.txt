@@ -1,0 +1,278 @@
+from pyspark.sql import *
+
+creating spark dataframe:
+
+    df = spark.read.json("/home/ram/futurense_hadoop-pyspark/labs/dataset/people/people.json")
+    df = spark.read.options(delimiter=";",header=True).csv("/home/ram/futurense_hadoop-pyspark/labs/dataset/bankmarket/bankmarketdata.csv")
+    df1= spark.read.load("/home/ram/futurense_hadoop-pyspark/labs/dataset/bankmarket/bankmarketdata.csv",format="csv",sep=";",inferSchema=True,header=True)
+    df = spark.createDataFrame([
+        Row(a=1, b=2., c='string1', d=date(2000, 1, 1), e=datetime(2000, 1, 1, 12, 0)),
+        Row(a=2, b=3., c='string2', d=date(2000, 2, 1), e=datetime(2000, 1, 2, 12, 0)),
+        Row(a=4, b=5., c='string3', d=date(2000, 3, 1), e=datetime(2000, 1, 3, 12, 0))
+            ])
+    df = spark.createDataFrame([
+            (100, 2., 'string1', date(2000, 1, 1), datetime(2000, 1, 1, 12, 0)),
+            (101, 3., 'string2', date(2000, 2, 1), datetime(2000, 1, 2, 12, 0)),
+            (102, 4., 'string3', date(2000, 3, 1), datetime(2000, 1, 3, 12, 0))
+        ], schema='a long, b double, c string, d date, e timestamp')
+    dff = spark.createDataFrame(rdd,schema='a int, b string, c float, d string')
+    df = spark.createDataFrame(pandas_df)
+    df=rdd.toDF()
+
+    structureSchema = StructType([
+        StructField('name', StructType([
+             StructField('firstname', StringType(), True),
+             StructField('middlename', StringType(), True),
+             StructField('lastname', StringType(), True)
+             ])),
+         StructField('id', StringType(), True),
+         StructField('gender', StringType(), True),
+         StructField('salary', IntegerType(), True)
+         ])
+    arrayStructureSchema = StructType([
+        StructField('name', StructType([
+        StructField('firstname', StringType(), True),
+        StructField('middlename', StringType(), True),
+        StructField('lastname', StringType(), True)
+        ])),
+        StructField('hobbies', ArrayType(StringType()), True),
+        StructField('properties', MapType(StringType(),StringType()), True)
+        ])
+    
+    df2 = spark.createDataFrame(data=structureData,schema=structureSchema)
+
+
+viewing df:
+    df.show()
+    df.show(5)
+    df.show(truncate=False)
+    df.show(1,vertical=True)
+    df3.describe().show()
+
+
+Accessing rdd methods from df:
+    df.rdd --> to convert df to rdd
+    df.rdd.getNumPartitions()
+    df.rdd.repartition() or df.
+
+selecting columns in df:
+    df.select(df.col1_name,df.col2_name,df.col3_name)
+    df.select(df['col1_name'],df['col2_name'])
+
+creating a new column with existing columns in df:
+    df1=df.withColumn('fullname',concat_ws(' ',df2.name.firstname,df2.name.middlename,df2.name.lastname)).show()
+    df1=df.withColumn('salary_grade',when(col("salary").cast(IntegerType()) < 2000,"Low").when(col("salary").cast(IntegerType()) < 4000,"Medium").otherwise("High"))
+    df1=df.withColumn("new_column", when((col("code") == "a") | (col("code") == "d"), "A").when((col("code") == "b") & (col("amt") == "4"), "B").otherwise("A1"))
+    
+    df1=df.withColumn('Active',lit('TRUE')).show()
+    df1=df.withColumn("lit_value2", when(col("Salary") >=40000 & col("Salary") <= 50000,lit("100")).otherwise(lit("200")))
+    
+    df1=df.withColumnRenamed('fullname','fname').show()
+
+    multiple columns adding:
+        df1=df.withColumn("age",col("age").cast(StringType())).withColumn("isGraduated",col("isGraduated").cast(BooleanType())).withColumn("jobStartDate",col("jobStartDate").cast(DateType()))
+
+        updatedDF = df2.withColumn("OtherInfo", 
+                                            struct(col("id").alias("identifier"),
+                                                    col("gender").alias("gender"),
+                                                    col("salary").alias("salary"),
+                                                    when(col("salary").cast(IntegerType()) < 2000,"Low")
+                                                    .when(col("salary").cast(IntegerType()) < 4000,"Medium")
+                                                    .otherwise("High").alias("Salary_Grade")
+                                )).drop("id","gender","salary")
+dropping columns:
+    df1=df.drop('name')
+    df1=df.drop(subset=["population","type"])
+
+    dropping columns with null values:
+        df1=df.na.drop(subset=["state"])
+        df1=df.na.drop(how="any")           # default
+        df1=df.na.drop(how="all")
+
+        thresh: remove records which have less number of non nulls than thresh.
+        df.na.drop(how="any",thresh=2)
+        df.na.drop(how="all",thresh=2)
+        df.na.drop(subset=["population","type"])
+
+    filling nulls:
+        df.fillna(value='CA',subset=["state"]).show()
+        df.na.fill(value='CA',subset=["state"]).show()
+        df.fillna({"value":"CA","state":"NA"})
+
+
+filtering records:
+    df1=df.filter((dft.Amount>=1000) & (dft.Time >= date_sub(current_date(),7)) )
+    df1=df.filter((df3.amt>3000) & (df3.type=='Credit') & (df3.code.like('J%')))
+    df1=df.filter(upper(df2.name.lastname).like('%S%'))
+    df1=df.filter("state is not NULL")
+    df1=df.filter("NOT state is NULL")
+    df1=df.filter(df.state.isNotNull())
+    df1=df.filter(col("state").isNotNull())
+    df1=df.filter((df.state == 'OH') & (array_contains(df.languages,'Java')))
+
+
+selecting the columns:
+
+    df1=df.select('Trans','Amount')
+    df1=df.select(col("*"))
+
+    df1=df.select(col("*"), expr("case when gender = 'M' then 'Male' " + "when gender = 'F' then 'Female' " + "else 'Unknown' end").alias("new_gender"))
+    df3 = df2.selectExpr("cast(age as int) age", "cast(isGraduated as string) isGraduated","cast(jobStartDate as string) jobStartDate")
+    
+    df22=df.select(col("*"), when(col("gender") == "M","Male").when(col("gender") == "F","Female").otherwise("Unknown").alias("new_gender")).show(truncate=False)
+    df.select(df.name,explode(df.languagesAtSchool)).show()
+    df.select(df.name,explode_outer(df.knownLanguages)).show() -->explode null also
+    df.select(df.name,posexplode(df.knownLanguages)).show() --->explode with array position column
+    df.select(df.name,posexplode(df.knownLanguages)).show()  -->explode with array position column with null aslo
+
+    df.select(sum('salary'),avg('salary'),sum('bonus'),max('bonus')).show()
+
+     df3.agg(sum(col('Value').cast(FloatType()))).show()
+
+     df3.groupBy('Category').agg(sum(col('Value').cast(FloatType()))).show()
+
+     df3.selectExpr('cast(Value as double) as val').agg(sum('val')).show()
+
+Grouping:
+    --df.groupBy("department").sum("salary").show(truncate=False)
+    --df.groupBy("department") \
+        .agg(sum("salary").alias("sum_salary"), \
+            avg("salary").alias("avg_salary"), \
+            sum("bonus").alias("sum_bonus"), \
+            max("bonus").alias("max_bonus") \
+        ) \
+        .show(truncate=False)
+
+    --df.select(sum('salary'),avg('salary'),sum('bonus'),max('bonus')).show()
+
+    --df.groupBy("department",'state').agg(avg('salary').alias('avgsal')).filter(col('avgsal')>80000).show()
+    -- df.groupBy("department").agg(avg('salary').alias('avgsal')).where(col('avgsal')>80000).show()
+
+    
+Miscellaneous:
+    --df.select(count_distinct(df.salary)).show()
+    --df.select(approx_count_distinct(df.salary)).show()
+    --print("approx_count_distinct: " + \
+        str(df.select(approx_count_distinct("salary")).collect()[0][0]))
+    --df.select(collect_list("salary")).show(truncate=False)
+    df.select(first("salary")).show(truncate=False)
+    df.select(last("salary")).show(truncate=False)
+    df.select(kurtosis("salary")).show(truncate=False)
+    df.select(max("salary")).show(truncate=False)
+    df.select(min("salary")).show(truncate=False)
+    df.select(mean("salary")).show(truncate=False)
+    df.select(skewness("salary")).show(truncate=False)
+    df.select(stddev("salary"), stddev_samp("salary"), \
+        stddev_pop("salary")).show(truncate=False)
+    df.select(sum("salary")).show(truncate=False)
+    df.select(sumDistinct("salary")).show(truncate=False)
+    df.select(variance("salary"),var_samp("salary"),var_pop("salary")) \
+    .show(truncate=False)
+
+
+joins:
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"inner")
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"outer")  #full outer
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"full")   #full outer
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"fullouter") #full outer
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"leftouter") #leftjoin
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"left")     #left join
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"rightouter") #right join
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"right")      #right join
+
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"leftsemi")   # performs inner join and gives columns from left table
+    empDF.join(deptDF,empDF.emp_dept_id ==  deptDF.dept_id,"leftanti")   # non matching records in left table with columns from left
+
+
+     empDF.alias('emp1').join(empDF.alias('emp2'),col("emp1.emp_id") ==  col("emp2.superior_emp_id")).select(col("emp1.emp_id"),col("emp1.name"),
+                                                                                                             col("emp2.emp_id").alias("superior_emp_id"),
+                                                                                                             col("emp2.name").alias("superior_emp_name"))
+
+orderby:
+
+    df.sort("department","state").show(truncate=False) # sorted only in the partitions
+    df.orderBy("department","state").show(truncate=False)  # sorting done on whole df
+
+    df.sort(col("department").asc(),col("state").desc()).show(truncate=False)
+    df.orderBy(col("department").asc(),col("state").desc()).show(truncate=False)
+
+
+running sql queries:
+
+    df.createOrReplaceTempView("EMP")
+    df.select("employee_name",asc("department"),desc("state"),"salary","age","bonus").show(truncate=False)
+
+    spark.sql("select employee_name,department,state,salary,age,bonus from EMP ORDER BY department asc").show(truncate=False)
+
+
+Window functions:
+    from pyspark.sql.window import Window
+    from pyspark.sql.functions import row_number
+
+    windowSpec  = Window.partitionBy("department").orderBy("salary")
+
+    df.withColumn("row_number",row_number().over(windowSpec))
+    df.withColumn("sal_rank",rank().over(windowSpec))
+    df.withColumn("percent_rank",percent_rank().over(windowSpec))
+    df.withColumn("ntile",ntile(2).over(windowSpec))
+    df.withColumn("cume_dist",cume_dist().over(windowSpec))
+    df.withColumn("lag",lag("salary",2).over(windowSpec))
+    df.withColumn("lead",lead("salary",2).over(windowSpec))
+
+    windowSpecAgg  = Window.partitionBy("department")
+    from pyspark.sql.functions import col,avg,sum,min,max,row_number 
+    df.withColumn("row",row_number().over(windowSpec)) \
+    .withColumn("avg", avg(col("salary")).over(windowSpecAgg)) \
+    .withColumn("sum", sum(col("salary")).over(windowSpecAgg)) \
+    .withColumn("min", min(col("salary")).over(windowSpecAgg)) \
+    .withColumn("max", max(col("salary")).over(windowSpecAgg)) \
+    .where(col("row")==1).select("department","avg","sum","min","max") \
+    .show()
+
+running sql queries:
+
+    registering table as dataframe:
+        df.registerTempTable("people")
+        df.createOrReplaceTempView("people")
+    
+    spark.sql("select name,age from people ORDER BY age asc").show(truncate=False)
+    spark.sql("select * from people where age>20").show(truncate=False)
+    spark.sql("select age,count(*) from people group by age").show(truncate=False)
+    spark.sql("select age,count(*) from people group by age order by age").show(truncate=False)
+    spark.sql("select age,count(*) as cnt from people group by age having cnt>1").show(truncate=False)
+    spark.sql("select count(*),case when age<=19 then 'teenager' when age>19 then 'adult' else 'NA' end as tpe from people where age is not null group by tpe").show(truncate=False)
+
+     spark.sql("select count(*),case when age<13 then 'kids' when age>=13 and age<=19 then 'teenagers' when age>=20 and age<=30 then 'youngsters' when age>=31 and age<=50 then 'middle-agers' when age>50 then 'seniors' else 'NA' end as tpe from people where age is not null group by tpe").show(truncate=False)
+
+
+
+    
+    df.select("employee_name",asc("department"),desc("state"),"salary","age","bonus").show(truncate=False)
+
+    
+
+
+Saving the pyspark sql dataframes:
+
+    df.write.options(sep=";").csv("/mnt/c/Users/miles/Documents/Github/futurense-dataengg-bootcamp/assignments/pyspark/pyspark-sql/csv")
+
+    qresult.write.options(sep=",").csv("/mnt/c/Users/miles/Documents/Github/futurense-dataengg-bootcamp/assignments/pyspark/pyspark-sql/csv1")
+
+    df.select("name", "age").write.save("/mnt/c/Users/miles/Documents/Github/futurense-dataengg-bootcamp/assignments/pyspark/pyspark-sql/csv1", format="csv3")
+
+    #Start Spark Shell with Avro dependency
+    pyspark --packages org.apache.spark:spark-avro_2.12:3.3.2
+
+    #Read the data in parquet from hdfs
+    newDf = spark.read.format("parquet").load("/home/ubuntu/spark/parquet")
+
+    #Write data in avro format
+    newDf.select("name", "age").write.format("avro").save("/home/ubuntu/spark/avro/teenagers.avro")
+
+    #Read data in avro format
+    spark.read.format("avro").load("/home/ubuntu/spark/avro/teenagers.avro")
+
+
+
+
+    
