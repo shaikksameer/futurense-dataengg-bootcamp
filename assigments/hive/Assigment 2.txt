@@ -1,0 +1,21 @@
+Assignment #2:
+1. Create "weather" external table under /user/training/weather
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2. Load the data from ~/futurence_hadoop-pyspark/labs/dataset/weather to /user/training/weather
+3. Display the weather data
+4. Display Max, Min weather
+5. Display month wise Max and Min weather
