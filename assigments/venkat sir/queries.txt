@@ -1,0 +1,456 @@
+question 1 answer
+
+--query
+CREATE TABLE problem1_q1 AS
+WITH patient_ages AS
+(SELECT (patientID), ssn, dob, FLOOR(DATEDIFF(current_date,dob)/365.25) AS Age from patient)
+SELECT c.patientID, c.Age, t.date AS treatment_date,
+CASE
+WHEN c.Age BETWEEN 0 AND 14 THEN 'Children'
+WHEN c.Age BETWEEN 15 AND 24 THEN 'Youth'
+WHEN c.Age BETWEEN 25 AND 64 THEN 'Adults'
+ELSE 'Seniors'
+END AS age_category
+FROM patient_ages c
+JOIN treatment t ON c.patientid = t.patientid
+WHERE YEAR(t.date) = 2022;
+
+--external table
+CREATE EXTERNAL TABLE problem1_q1(
+id int,
+age int,
+dob date,
+category string
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/user/training/hive/q1';
+
+--insert into external table
+INSERT OVERWRITE TABLE problem1_q1
+SELECT c.patientID, c.Age, t.date AS treatment_date,
+CASE
+WHEN c.Age BETWEEN 0 AND 14 THEN 'Children'
+WHEN c.Age BETWEEN 15 AND 24 THEN 'Youth'
+WHEN c.Age BETWEEN 25 AND 64 THEN 'Adults'
+ELSE 'Seniors'
+END AS age_category
+FROM (
+  SELECT patientID, ssn, dob, FLOOR(DATEDIFF(current_date,dob)/365.25) AS Age from patient
+) c
+JOIN treatment t ON c.patientid = t.patientid
+WHERE YEAR(t.date) = 2022;
+
+--create table in mysql 
+CREATE TABLE problem1_q1(
+id int,
+age int,
+dob date,
+category varchar(20)
+);
+
+--sqoop export 
+sqoop export \
+--connect jdbc:mysql://localhost:3306/solution \
+--username root \
+--password cloudera \
+--table problem1_q1 \
+--export-dir /user/training/hive/q1/000000_0 \
+--input-fields-terminated-by ',';
+ ===============================================================================================
+
+question 2 answer
+--query
+SELECT p.gender,
+  COUNT(t.treatmentId) AS `Total Treatment`,
+  COUNT(c.claimId) AS `Total Claims`,
+  COUNT(t.treatmentId) - COUNT(c.claimId) AS `difference`,
+  COUNT(c.claimId)/COUNT(t.treatmentId) AS `ratio`
+FROM treatment t 
+LEFT JOIN claim c 
+  ON t.claimID=c.claimID
+INNER JOIN person p 
+  ON p.personId=t.patientId 
+GROUP BY p.gender;
+
+--create external table 
+CREATE EXTERNAL TABLE problem1_q2(
+gender string,
+total_treatment int,
+total_claim int,
+difference int,
+ratio decimal
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/user/training/hive/q2';
+
+
+--insert into external table
+INSERT OVERWRITE TABLE problem1_q2
+SELECT p.gender,
+  COUNT(t.treatmentId) AS `Total Treatment`,
+  COUNT(c.claimId) AS `Total Claims`,
+  COUNT(t.treatmentId) - COUNT(c.claimId) AS `difference`,
+  COUNT(c.claimId)/COUNT(t.treatmentId) AS `ratio`
+FROM treatment t 
+LEFT JOIN claim c 
+  ON t.claimID=c.claimID
+INNER JOIN person p 
+  ON p.personId=t.patientId 
+GROUP BY p.gender;
+
+--create table in mysql
+CREATE TABLE problem1_q2(
+gender varchar(20),
+total_treatment int,
+total_claim int,
+difference int,
+ratio float(10,5)
+);
+
+--sqoop export 
+sqoop export \
+--connect jdbc:mysql://localhost:3306/solution \
+--username root \
+--password cloudera \
+--table problem1_q2 \
+--export-dir /user/training/hive/q2/000000_0 \
+--input-fields-terminated-by ',';
+====================================================================================
+question 3
+
+--query
+SELECT p.pharmacyID, p.pharmacyName, COUNT(m.medicineid), SUM(m.maxprice), SUM(m.maxprice - (k.discount * 0.01)) AS `After discount`
+FROM pharmacy p
+JOIN keep k ON p.pharmacyID = k.pharmacyID
+JOIN medicine m ON k.medicineID = m.medicineID
+GROUP BY p.pharmacyID, p.pharmacyName;
+
+--create external table 
+CREATE EXTERNAL TABLE problem1_q3(
+pharmacyid int,
+pharmacyname string,
+medicine_count int,
+max_price_sum float,
+discount float
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/user/training/hive/q3';
+
+-insert in external table
+INSERT OVERWRITE TABLE problem1_q3
+SELECT p.pharmacyID, p.pharmacyName, COUNT(m.medicineid), SUM(m.maxprice), SUM(m.maxprice - (k.discount * 0.01)) AS `After discount`
+FROM pharmacy p
+JOIN keep k ON p.pharmacyID = k.pharmacyID
+JOIN medicine m ON k.medicineID = m.medicineID
+GROUP BY p.pharmacyID, p.pharmacyName;
+
+--mysql 
+CREATE TABLE problem1_q3(
+pharmacyid int,
+pharmacyname varchar(20),
+medicine_count int,
+max_price_sum float,
+discount float
+);
+
+--sqoop export
+sqoop export \
+--connect jdbc:mysql://localhost:3306/solution \
+--username root \
+--password cloudera \
+--table problem1_q3 \
+--export-dir /user/training/hive/q3/000000_0 \
+--input-fields-terminated-by ',';
+============================================================================================================================================
+
+question 4 
+ --query 
+SELECT diseaseid,
+SUM(CASE WHEN Gender = 'male' THEN Count END) AS male_count,
+SUM(CASE WHEN Gender = 'female' THEN Count END) AS female_count,
+(SUM(CASE WHEN Gender = 'male' THEN Count END) / SUM(CASE WHEN Gender =
+'female' THEN Count END)) AS ratio
+FROM (
+SELECT d.diseaseID AS diseaseid,
+pe.gender AS Gender,
+COUNT(*) AS Count
+FROM disease d
+JOIN treatment t ON d.diseaseID = t.diseaseID
+JOIN patient p ON p.patientID = t.patientID
+JOIN person pe ON pe.personID = p.patientID
+GROUP BY d.diseaseID, pe.gender
+) a
+GROUP BY diseaseid
+ORDER BY diseaseid ASC;
+
+--create external table 
+CREATE EXTERNAL TABLE problem1_q4(
+id int,
+male int,
+female int,
+ratio decimal(10,5)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/user/training/hive/q4';
+
+
+--insert into external table 
+INSERT OVERWRITE TABLE problem1_q4
+SELECT diseaseid,
+SUM(CASE WHEN Gender = 'male' THEN Count END) AS male_count,
+SUM(CASE WHEN Gender = 'female' THEN Count END) AS female_count,
+(SUM(CASE WHEN Gender = 'male' THEN Count END) / SUM(CASE WHEN Gender =
+'female' THEN Count END)) AS ratio
+FROM (
+SELECT d.diseaseID AS diseaseid,
+pe.gender AS Gender,
+COUNT(*) AS Count
+FROM disease d
+JOIN treatment t ON d.diseaseID = t.diseaseID
+JOIN patient p ON p.patientID = t.patientID
+JOIN person pe ON pe.personID = p.patientID
+GROUP BY d.diseaseID, pe.gender
+) a
+GROUP BY diseaseid
+ORDER BY diseaseid ASC;
+
+
+--mysql create table 
+CREATE TABLE problem1_q4(
+id int,
+male int,
+female int,
+ratio decimal(10,5)
+);
+
+--sqoop export
+sqoop export \
+--connect jdbc:mysql://localhost:3306/solution \
+--username root \
+--password cloudera \
+--table problem1_q4 \
+--export-dir /user/training/hive/q4/000000_0 \
+--input-fields-terminated-by ',';
+
+======================================================================================================
+question 5 :
+
+--query
+SELECT p.pharmacyName,
+MAX(k.quantity) AS max_meds,
+MIN(k.quantity) AS min_meds,
+ROUND(AVG(k.quantity), 2) AS avg_meds
+FROM pharmacy p
+JOIN keep k ON p.pharmacyID = k.pharmacyID
+GROUP BY p.pharmacyName;
+
+--create external table
+CREATE EXTERNAL TABLE problem1_q5 
+(
+pharmacyName STRING,
+max_meds INT,
+min_meds INT,
+avg_meds decimal(10,5)
+) 
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/user/training/hive/q5';
+
+--insert into external table 
+INSERT OVERWRITE TABLE problem1_q5
+SELECT p.pharmacyName,
+MAX(k.quantity) AS max_meds,
+MIN(k.quantity) AS min_meds,
+ROUND(AVG(k.quantity), 2) AS avg_meds
+FROM pharmacy p
+JOIN keep k ON p.pharmacyID = k.pharmacyID
+GROUP BY p.pharmacyName;
+
+--create table in mysql
+CREATE  TABLE problem1_q5 
+(
+pharmacyName varchar(20),
+max_meds INT,
+min_meds INT,
+avg_meds decimal(10,5)
+);
+
+
+--sqoop export 
+sqoop export \
+--connect jdbc:mysql://localhost:3306/solution \
+--username root \
+--password cloudera \
+--table problem1_q5 \
+--export-dir /user/training/hive/q5/000000_0 \
+--input-fields-terminated-by ',';
+
+
+===============================================================================
+question 6 
+--query 
+SELECT a.city,
+ROUND(COUNT(DISTINCT pha.pharmacyID) / COUNT(DISTINCT pre.prescriptionID),4)
+AS pharmacy_prescription_ratio
+FROM pharmacy pha
+JOIN address a ON a.addressID = pha.addressID
+JOIN prescription pre ON pha.pharmacyID = pre.pharmacyID
+GROUP BY a.city
+HAVING COUNT(pre.prescriptionID) > 100
+ORDER BY pharmacy_prescription_ratio;
+
+--create internal table
+CREATE EXTERNAL TABLE problem1_q6
+(
+city string,
+ratio decimal(6,4)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/user/training/hive/q6';
+
+--insert into external table
+INSERT OVERWRITE TABLE problem1_q6
+SELECT a.city,
+ROUND(COUNT(DISTINCT pha.pharmacyID) / COUNT(DISTINCT pre.prescriptionID),4)
+AS pharmacy_prescription_ratio
+FROM pharmacy pha
+JOIN address a ON a.addressID = pha.addressID
+JOIN prescription pre ON pha.pharmacyID = pre.pharmacyID
+GROUP BY a.city
+HAVING COUNT(pre.prescriptionID) > 100
+ORDER BY pharmacy_prescription_ratio;
+
+--create table mysql
+CREATE TABLE problem1_q6
+(
+city varchar(10),
+ratio decimal(6,4)
+);
+
+--sqoop export 
+sqoop export \
+--connect jdbc:mysql://localhost:3306/solution \
+--username root \
+--password cloudera \
+--table problem1_q6 \
+--export-dir /user/training/hive/q6/000000_0 \
+--input-fields-terminated-by ',';
+
+======================================================================================
+
+question 7
+--bucketing
+CREATE TABLE address_part (
+addressid INT,
+address1 STRING,
+city STRING,
+zip INT)
+PARTITIONED BY (state STRING) CLUSTERED BY (city) INTO 10 BUCKETS;
+
+INSERT INTO TABLE address_part PARTITION (state)SELECT addressid,address1,city,zip,state FROM address;
+
+--CREATE EXTERNAL TABLE
+CREATE EXTERNAL TABLE prb1_7 (city STRING, diseaseName STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ;
+
+
+-insert into external table
+INSERT OVERWRITE TABLE prb1_7 SELECT city, diseaseName
+FROM (
+SELECT city, diseaseName, counts, DENSE_RANK() OVER (PARTITION BY city ORDER BY
+counts DESC) AS ranks
+FROM (
+SELECT a.city, d.diseaseName, COUNT(t.patientID) AS counts
+FROM treatment t
+JOIN person p ON t.patientID = p.personID
+JOIN disease d ON t.diseaseID = d.diseaseID
+JOIN address_part a ON p.addressID = a.addressID
+WHERE a.state = 'AL'
+GROUP BY a.city, d.diseaseName
+) a
+) b
+WHERE ranks = 1;
+
+--mysql table
+create table prb1_7 (city VARCHAR(30), diseaseName VARCHAR(50)) ;
+
+--sqoop export
+sqoop export --connect jdbc:mysql://localhost/solution --username root --password cloudera --table prb1_7 --export-dir /user/hive/warehouse/prb1_7 --input-fields-terminated-by ',';
+
+
+======================================================================================
+
+question 8 
+--BUCKETING
+CREATE TABLE treatment_part (
+treatmentid INT,
+date DATE,
+patientid INT,
+diseaseid INT,
+claimid BIGINT
+)
+CLUSTERED BY (diseaseid) INTO 5 BUCKETS;
+
+INSERT INTO TABLE treatment_part SELECT treatmentid,date,patientid,diseaseid,claimid
+FROM treatment
+
+--external table
+CREATE EXTERNAL TABLE prb1_8 (diseaseName STRING, no_of_household INT) ROW
+FORMAT DELIMITED FIELDS TERMINATED BY ',' ;
+
+--insert into external table
+INSERT OVERWRITE TABLE prb1_8 SELECT diseaseName, COUNT(address1) AS
+no_of_household
+FROM (select d.diseaseName,a.address1,COUNT(t.patientID)
+from disease d join treatment_part t on d.diseaseID=t.diseaseID
+join person p on t.patientID=p.personID
+join address a on p.addressID=a.addressID
+group by d.diseasename,a.address1
+having count(t.patientID)>1
+order by d.diseasename desc,a.address1) a
+group by diseaseName;
+
+--mysql table
+create table prb1_8 (diseaseName VARCHAR(50), no_of_household INT);
+
+--sqoop export
+sqoop export --connect jdbc:mysql://localhost:3306/solution --username root --password cloudera --table prb1_8 --export-dir /user/hive/warehouse/prb1_8 --input-fields-terminated-by ',';
+
+
+
+======================================================================================
+question 9
+
+--query
+select a.state, round(count(treatmentID)/sum(if(claimID is
+null,0,1)),2) as treatment_claim_ratio
+from treatment_part t join person p on t.patientID=p.personID
+join address_part a on a.addressID=p.addressID
+where t.date between '2021-04-01' and '2022-03-31'
+group by a.state;
+
+--external table
+CREATE EXTERNAL TABLE prb1_9 (state STRING, treatment_claim_ratio DECIMAL(3,2)) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ;
+
+
+
+-- insert into external table
+INSERT OVERWRITE TABLE prb1_9 select a.state, round(count(treatmentID)/sum(if(claimID is
+null,0,1)),2) as treatment_claim_ratio
+from treatment_part t join person p on t.patientID=p.personID
+join address_part a on a.addressID=p.addressID
+where t.date between '2021-04-01' and '2022-03-31'
+group by a.state;
+
+--mysql table
+create table prb1_9 (state VARCHAR(2), treatment_claim_ratio DECIMAL(3,2));
+
+--sqoop export
+sqoop export --connect jdbc:mysql://localhost/solution --username root --password cloudera --table prb1_9 --export-dir /user/hive/warehouse/prb1_9 --input-fields-terminated-by ',';
+
+
+

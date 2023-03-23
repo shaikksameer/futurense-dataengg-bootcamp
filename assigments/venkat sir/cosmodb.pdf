@@ -1,0 +1,55 @@
+q1. Read all the documents from the books collection where 'tags' array contains 'database' element?
+SELECT * from c where array_contains(c.tags,"database")
+
+
+q2.List out all the document from bokks collectinn where author's profile contains exactly 2 courses?
+SELECT * from c where c.author.profile.courses=2
+
+
+q3. select all the doc from book collection where tags array is exactly equal to ["language", "freeware", "programming"].
+SELECT * from c where c.tags = ["language", "freeware", "programming"]
+
+
+q4. List out all doc where tags array contains 'programming' elements
+SELECT * from c where array_contains(c.tags,"programming")
+
+
+q5.List out all doc where 'languages' arra contains 'telugu' element?
+SELECT * from c where array_contains(c.languages,"telugu")
+
+
+
+q6.list out all the doc present in book collection
+select * from c
+
+
+q7. Find total number of doc present in books collection?
+SELECT count(1) from c 
+
+q8. List out first doc present in book collection?
+select top 1 * from c 
+
+
+q9. select all the doc where either no_of_reviews > 3 or tags araay contains programming element
+select * from c where c.no_of_reviews > 3 or array_contains(c.tags,"programming")
+
+
+q10. select all doc where either no_of_reviews is less than 3 or downloadable is true or author profile contains atleast 2 books?
+select * from c where (c.no_of_reviews < 3) or (c.downloadable =true) or (c.author.profile.books >= 2) 
+
+
+
+q11.list out all the doc where tags array contains only one element 'programming'
+SELECT * from c where c.tags = ["programming"]
+
+
+
+
+
+
+
+
+
+
+
+

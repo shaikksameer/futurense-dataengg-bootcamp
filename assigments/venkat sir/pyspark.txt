@@ -1,0 +1,31 @@
+--to add data in hdfs 
+hadoop fs -put /home/cloudera/Desktop/walmart.csv /user/pyspark
+
+spark = SparkSession.builder.appName('Spark').master("local[3]").getOrCreate()
+rdd=sc.textFile("/user/pyspark")
+header =rdd.first()
+rdd1=rdd.filter(lambda row: row!=header)
+
+1.display th number of countries present in the data
+Country_rdd=rdd1.map(lambda x: x.split(',')[1])
+numberOfCountry=Country_rdd.distinct().count()
+
+
+2.Display the number of units sold in each region.
+region_rdd=rdd1.map(lambda x: x.split(','))
+regionUnit= region_rdd.map(lambda x: (x[0],int(x[8])))
+numerOfRegionUnitSold=regionUnit.reduceByKey(lambda x,y: x+y)
+
+
+3.Display the 10 most recent sales.
+
+
+
+
+
+4.Display the products with atleast 2 occurences of 'a' (Using spark)
+15.Display country in each region with highest units sold. (Using spark)
+6.Display the unit price and unit cost of each item in ascending order. (Using spark)
+7.Display the number of sales yearwise. (Using pyspark)
+8.Display the number of orders for each item. (Using pyspark)
+9.Display the countr.with highest calallicing pyspark)
